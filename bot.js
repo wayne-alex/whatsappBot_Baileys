@@ -381,6 +381,21 @@ app.post('/send', async (req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 });
+app.post('/send-dm', async (req, res) => {
+    try {
+        const { to, text } = req.body;
+        if (!to) return res.status(400).json({ success: false, error: 'Recipient phone required' });
+        if (!text) return res.status(400).json({ success: false, error: 'Text required' });
+        if (!isReady) return res.status(503).json({ success: false, error: 'Bot not ready' });
+
+        // Normalize phone to WhatsApp JID: "2547..." → "2547...@s.whatsapp.net"
+        const jid = to.includes('@') ? to : `${to.replace(/\+/g, '')}@s.whatsapp.net`;
+        await sock.sendMessage(jid, { text });
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
 
 app.post('/send-entry', async (req, res) => {
     try {
